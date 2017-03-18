@@ -1,55 +1,63 @@
-var scheduled = function()
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+* @ FILENAME       : SS_SalesOrder_Item_Fields_Update.js
+* @ AUTHOR         : eliseo@upayasolutions.com
+* @ DATE           : Mar 13, 2017
+* @ DESCRIPTION    :
+* 									- The script is triggered on-demand by UE Inventory Item Update Sales Order (deployed in Inventory Records).
+* 									- This will receive the following parameters: Item Internal ID, B3 Product Code, GL Product Code value.
+* 									- It will look for Sales Order record where one or more of the item line is equal to the parameter: Item Internal ID
+* 									- For each line items in Sales Order record where the B3 Product Code and GL Product Code does not match the passed parameter, modify the line item.
+*										- Exclude the following status: Sales Order: Billed, Sales Order: Cancelled, Sales Order: Closed
+* Copyright (c) 2012 Upaya - The Solution Inc.
+* 10530 N. Portal Avenue, Cupertino CA 95014
+* All Rights Reserved.
+*
+* This software is the confidential and proprietary information of
+* Upaya - The Solution Inc. ("Confidential Information"). You shall not
+* disclose such Confidential Information and shall use it only in
+* accordance with the terms of the license agreement you entered into
+* with Upaya.
+* object
+*/
+
+/**
+ * @param {String} type Context Types: scheduled, ondemand, userinterface, aborted, skipped
+ * @returns {Void}
+ */
+var scheduledFieldUpdate = function(type)
 {
-	var field1 = 'class';
+	var paramItemID = nlapiGetContext().getSetting('SCRIPT', 'custscript_itemid');
+	var paramB3ProductCode = nlapiGetContext().getSetting('SCRIPT', 'custscript_b3_product_code');
+	var paramGlProductCode = nlapiGetContext().getSetting('SCRIPT', 'custscript_gl_product_code');
 
-	var filtersForGLProductCode = [
-		["status","noneof","SalesOrd:G","SalesOrd:C","SalesOrd:H"],
-		"AND",
-		["type","anyof","SalesOrd"],
-		"AND",
-		["mainline","is","F"],
-		"AND",
-		["item.class","noneof","@NONE@"],
-		"AND",
-		["class","anyof","@NONE@"],
-		"AND",
-		["type","anyof","SalesOrd"]
-	];
+	nlapiLogExecution('DEBUG', '--- VALUES ---', 'Item Internal ID: ' + paramItemID + ' | B3 Product Code:' + paramB3ProductCode + ' | GL Product Code :'  + paramGlProductCode);
 
-	var field2 = 'custitem_b3_product_code';
+	if(paramItemID != null && paramItemID != ''){}
 
-	var filtersB3ProductCode = [
-   ["status","noneof","SalesOrd:G","SalesOrd:C","SalesOrd:H"],
-   "AND",
-   ["type","anyof","SalesOrd"],
-   "AND",
-   ["mainline","is","F"],
-   "AND",
-   ["custcol_b3_product_code","isempty",""],
-   "AND",
-   ["item.custitem_b3_product_code","isnot",""],
-   "AND",
-   ["type","anyof","SalesOrd"]
-	];
+	var searchResults = nlapiSearchRecord("salesorder",null,
+		[
+		   ["status","noneof","SalesOrd:G","SalesOrd:C","SalesOrd:H"], //Exclude Sales Order: Billed, Sales Order: Cancelled, Sales Order: Closed
+		   "AND",
+		   ["type","anyof","SalesOrd"],
+		   "AND",
+		   ["mainline","is","F"],
+		   "AND",
+		   ["item.internalidnumber","equalto", paramItemID],
+		   "AND",
+		   ["type","anyof","SalesOrd"]
+		],
+		[
+		   new nlobjSearchColumn("internalid",null,null),
+		   new nlobjSearchColumn("statusref",null,null),
+		   new nlobjSearchColumn("line",null,null),
+		   new nlobjSearchColumn("item",null,null),
+		   new nlobjSearchColumn("custitem_b3_product_code","item",null),
+		   new nlobjSearchColumn("custcol_b3_product_code",null,null),
+		   new nlobjSearchColumn("class","item",null),
+		   new nlobjSearchColumn("class",null,null)
+		]
+	);
 
-
-	var updateGLProductCode = fieldListForUpdate(filtersForGLProductCode, field1);
-
-	if(updateGLProductCode != null && updateGLProductCode != '')
-	{
-		updateProcess(updateGLProductCode, field1);
-	}
-
-	var updateB3ProductCode = fieldListForUpdate(filtersB3ProductCode, field2);
-
-	if(updateB3ProductCode != null && updateB3ProductCode != '')
-	{
-		updateProcess(updateB3ProductCode, field2);
-	}
-}
-
-var updateProcess = function(searchResults, field)
-{
 	if (searchResults != null && searchResults != '')
 	{
 		for(var j =0; j < searchResults.length; j++)
@@ -64,74 +72,34 @@ var updateProcess = function(searchResults, field)
 			var soB3ProductCode = salesOrderValue.getValue('custcol_b3_product_code', 'item');
 			var glProductCode = salesOrderValue.getValue('class', 'item');
 			var soGlProductCode = salesOrderValue.getValue('class');
-			var val = '';
-
-			if (field == 'class') {
-				updateField = 'class';
-				val = glProductCode;
-			}
-			else if(field == 'custitem_b3_product_code')
-			{
-				updateField = 'custcol_b3_product_code';
-				val = b3ProductCode;
-			}
 
 			try
 			{
-				if(val != '')
+				if(paramGlProductCode != soGlProductCode)
 				{
-					var updateId = updateSalesOrderField(id, line, item, updateField, val);
-					var str = 'SUCCESS: ' + updateId + ' | Item:' + item + ' | Line: ' + line + ' | Field: ' + updateField + ' | Value: ' + val;
+					var updateId = updateSalesOrderField(id, line, item, 'class', paramGlProductCode);
+					var str = 'SUCCESS: Sales Order ID: ' + updateId + ' | Item:' + item + ' | Line: ' + line + ' | Field: class | Value: ' + paramGlProductCode;
 					logger(str);
 				}
+
+				if(paramB3ProductCode != soB3ProductCode)
+				{
+					var updateId = updateSalesOrderField(id, line, item, 'custcol_b3_product_code', paramB3ProductCode);
+					var str = 'SUCCESS: Sales Order ID: ' + updateId + ' | Item:' + item + ' | Line: ' + line + ' | Field: custcol_b3_product_code | Value: ' + paramB3ProductCode;
+					logger(str);
+				}
+
 			}
 			catch(ex)
 			{
-				var str = 'FAIL: ' + id + ' | Item:' + item + ' | Line: ' + line + ' | Field: ' + updateField + ' | Value: ' + val;
+				var str = 'FAIL: Sales Order ID: ' + id + ' | Item:' + item + ' | Line: ' + line;
 				logger(str);
-				nlapiLogExecution('ERROR', ex instanceof nlobjError ? ex.getCode() : 'CUSTOM_ERROR_CODE', ex instanceof nlobjError ? ex.getDetails() : 'JavaScript Error: ' + (ex.message !== null ? ex.message : ex));
+				nlapiLogExecution('DEBUG', ex instanceof nlobjError ? ex.getCode() : 'CUSTOM_ERROR_CODE', ex instanceof nlobjError ? ex.getDetails() : 'JavaScript Error: ' + (ex.message !== null ? ex.message : ex));
 			}
 
 		}
 	}
-}
 
-var fieldListForUpdate = function(filters, field)
-{
-	var columns =
-	[
-	   new nlobjSearchColumn("internalid",null,null),
-	   new nlobjSearchColumn("statusref",null,null),
-	   new nlobjSearchColumn("line",null,null),
-	   new nlobjSearchColumn("item",null,null),
-	   new nlobjSearchColumn("custitem_b3_product_code","item",null),
-	   new nlobjSearchColumn("custcol_b3_product_code",null,null),
-	   new nlobjSearchColumn("class","item",null),
-	   new nlobjSearchColumn("class",null,null)
-	];
-
-	var retList;
-	var search = nlapiCreateSearch('salesorder', filters, columns);
-
-	var resultSet = search.runSearch();
-	var startPos = 0, endPos = 1000;
-
-	while (startPos < 100000)
-	{
-		var currList = resultSet.getResults(startPos, endPos);
-		if (currList == null || currList.length <= 0)
-			break;
-		if (retList == null)
-			retList = currList;
-		else
-			retList = retList.concat(currList);
-		if (currList.length < 1000)
-			break;
-		startPos += 1000;
-		endPos += 1000;
-	}
-
-	return retList;
 }
 
 var logger = function(str){
@@ -167,7 +135,14 @@ var updateSalesOrderField = function(id, line, item, field, val)
 			obj.setLineItemValue('item', field, i, val);
 		}
 	}
-	var update = nlapiSubmitRecord(obj, false, false);
+	try
+	{
+		var update = nlapiSubmitRecord(obj, false, false);
+	}
+	catch(ex)
+	{
+		nlapiLogExecution('DEBUG', ex instanceof nlobjError ? ex.getCode() : 'CUSTOM_ERROR_CODE', ex instanceof nlobjError ? ex.getDetails() : 'JavaScript Error: ' + (ex.message !== null ? ex.message : ex));
+	}
 	return update;
 }
 
