@@ -7,7 +7,7 @@
 function getRESTlet(dataIn) {
 	
 	var context = nlapiGetContext();
-	var searchId = nlapiGetContext().getSetting('SCRIPT', 'custscript_if_search_id');
+	var searchId = nlapiGetContext().getSetting('SCRIPT', 'custscript_to_search_id');
 
 	var searchResult = {
 	    result: []
@@ -15,7 +15,7 @@ function getRESTlet(dataIn) {
 
 	try
 	{
-		var search = nlapiSearchRecord('transferorder', '216');
+		var search = nlapiSearchRecord('transferorder', searchId);
 		
 		if(search !== null && search !== '' && searchId !== '')
 		{
@@ -63,7 +63,7 @@ function getRESTlet(dataIn) {
 	if(searchResult !== null || searchResult !== '')
 	{
 		loggerJSON(JSON.stringify(searchResult));
-		return JSON.stringify(searchResult);
+		return searchResult;
 	}
 }
 
