@@ -1,6 +1,8 @@
 /**
  * @param {Object} dataIn Parameter object
  * @returns {Object} Output object
+ * Search Name: Transfer Order Oracle Export ( DO NOT DELETE OR MODIFY)
+ *
  */
 function getRESTlet(dataIn) {
 	
@@ -13,7 +15,7 @@ function getRESTlet(dataIn) {
 
 	try
 	{
-		var search = nlapiSearchRecord('itemfulfillment', searchId);
+		var search = nlapiSearchRecord('transferorder', '216');
 		
 		if(search !== null && search !== '' && searchId !== '')
 		{
@@ -21,37 +23,31 @@ function getRESTlet(dataIn) {
 
 			for(var i=0; i < search.length; i++)
 			{
-				var node = [];
-
-				var internalid = search[i].getValue('internalid');
-				var trandate = search[i].getValue('trandate');
 				var tranid = search[i].getValue('tranid');
-				var memo = search[i].getValue('memo');
-				var itemid = search[i].getValue('itemid', 'item');
+				var item = search[i].getText('item');
+				var internalid = search[i].getValue('internalid', 'item');
 				var quantity = search[i].getValue('quantity');
-				var custcol_line_no = search[i].getValue('custcol_line_no');
-				var custbody_3pl_shipment = search[i].getValue('custbody_3pl_shipment');
-				var name = search[i].getValue('name', 'custbody_if_location');
-				var custbody_b2b_so_num = search[i].getValue('custbody_b2b_so_num');
-				var custbody_dependent_ia_of_if = search[i].getValue('custbody_dependent_ia_of_if');
-				var custbody_if_to_location = search[i].getValue('custbody_if_to_location');
-				var line = search[i].getValue('line');
-
+				var subsidiary = search[i].getText('subsidiary');
+				var _location = search[i].getText('location');
+				var statusref = search[i].getText('statusref');
+				var fromInventoryLocation = search[i].getValue('namenohierarchy', 'fromLocation');
+				var toInventoryLocation = search[i].getValue('namenohierarchy', 'toLocation');
+				var lineExtractStatus = search[i].getText('custcol_line_integ_extract_status');
+				var lineNum = search[i].getValue('custcol_line_no');
+				
 				searchResult.result.push(
 					{
+						"tranid" : tranid,
+						"item" : item,
 						"internalid" : internalid,
-						"date" : trandate,
-						"document_number" : tranid,
-						"memo" : memo,
-						"item_name" : itemid,
 						"quantity" : quantity,
-						"linenum" : custcol_line_no,
-						"3pl_shipment" : custbody_3pl_shipment,
-						"location_name" : name,
-						"salesorder_for_extract" : custbody_b2b_so_num,
-						"dependent_ia_of_if" : custbody_dependent_ia_of_if,
-						"if_to_location" : custbody_if_to_location,
-						"line_id" : line
+						"subsidiary" : subsidiary,
+						"fromLocation" : _location,
+						"status" : statusref,
+						"fromInventoryLocation" : fromInventoryLocation,
+						"toInventoryLocation" : toInventoryLocation,
+						"lineExtractStatus" : lineExtractStatus,
+						"lineNum" : lineNum
 					}
 				);
 			}
@@ -67,7 +63,7 @@ function getRESTlet(dataIn) {
 	if(searchResult !== null || searchResult !== '')
 	{
 		loggerJSON(JSON.stringify(searchResult));
-		return searchResult;
+		return JSON.stringify(searchResult);
 	}
 }
 
@@ -100,11 +96,19 @@ function putRESTlet(dataIn) {
 
 var loggerJSON = function(str){
 	var d = nlapiDateToString(new Date(), "datetimetz")
-	var arrStr = str.match(/.{4000}/g);
-	for(var i in arrStr)
+	if(str.length > 4000)
 	{
-		var sequenceNum = 'Datetime: ' + d + ' | ' + (parseInt(i) + 1) + ' of ' + arrStr.length;
-		nlapiLogExecution('DEBUG', sequenceNum, arrStr[i])
+		var arrStr = str.match(/.{4000}/g);
+		for(var i in arrStr)
+		{
+			var sequenceNum = 'Datetime: ' + d + ' | ' + (parseInt(i) + 1) + ' of ' + arrStr.length;
+			nlapiLogExecution('DEBUG', sequenceNum, arrStr[i])
+		}
+	}
+	else
+	{
+		var sequenceNum = 'Datetime: ' + d;
+		nlapiLogExecution('DEBUG', sequenceNum, str);
 	}
 }
 
