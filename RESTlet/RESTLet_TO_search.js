@@ -1,8 +1,11 @@
 /**
+ * The RESTlet will query the saved search:
+ * Saved Search name: Transfer Order Oracle Export ( DO NOT DELETE OR MODIFY)
+ * Link: https://system.sandbox.netsuite.com/app/common/search/searchresults.nl?searchid=216&whence=
+ * Output will be in JSON format data
+  *
  * @param {Object} dataIn Parameter object
  * @returns {Object} Output object
- * Search Name: Transfer Order Oracle Export ( DO NOT DELETE OR MODIFY)
- *
  */
 function getRESTlet(dataIn) {
 	

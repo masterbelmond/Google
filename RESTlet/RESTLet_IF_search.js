@@ -1,9 +1,14 @@
 /**
+ * The RESTlet will query the saved search:
+ * Saved Search name: IFs for Oracle ( DO NOT DELETE OR MODIFY)
+ * Link: https://system.sandbox.netsuite.com/app/common/search/searchresults.nl?searchid=90&whence=
+ * Output will be in JSON format data
+  *
  * @param {Object} dataIn Parameter object
  * @returns {Object} Output object
  */
 function getRESTlet(dataIn) {
-	
+
 	var context = nlapiGetContext();
 	var searchId = nlapiGetContext().getSetting('SCRIPT', 'custscript_if_search_id');
 
@@ -14,7 +19,7 @@ function getRESTlet(dataIn) {
 	try
 	{
 		var search = nlapiSearchRecord('itemfulfillment', searchId);
-		
+
 		if(search !== null && search !== '' && searchId !== '')
 		{
 			logger('Number of Results: ' + search.length);
