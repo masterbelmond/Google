@@ -46,29 +46,69 @@ function userEventAfterSubmit(type){
 			{
 				//Detect if there is any changes to GL Product Code or B3 Product Code
 				var itemId = nlapiGetRecordId();
+
+				var objInventoryItem = nlapiLoadRecord(nlapiGetRecordType(), itemId);
+				var glProductCode = objInventoryItem.getFieldValue('class');
+				var b3ProductCode = objInventoryItem.getFieldValue('custitem_b3_product_code');
+
 				var searchFieldChange = hasFieldChanges(itemId);
+				var fieldChange = '';
 
 				if(searchFieldChange)
 				{
+					fieldChange = 'Yes';
+				}
+				else
+				{
+					fieldChange = 'No';
+				}
+
+				nlapiLogExecution('DEBUG', '--- VALUES ---', 'Has Field Change: ' + fieldChange + ' | Item Internal ID: ' + itemId + ' | B3 Product Code:' + b3ProductCode + ' | GL Product Code :'  + glProductCode);
+
+				if(searchFieldChange && glProductCode != null)
+				{
 					if(searchFieldChange != null && searchFieldChange != '')
 					{
-						
-						var objInventoryItem = nlapiLoadRecord(nlapiGetRecordType(), itemId);
-						var b3ProductCode = objInventoryItem.getFieldValue('custitem_b3_product_code');
+
 						var glProductCode = objInventoryItem.getFieldValue('class');
-						
+
 						var params = new Array();
 						params['custscript_itemid'] = itemId;
-						params['custscript_b3_product_code'] = b3ProductCode;
 						params['custscript_gl_product_code'] = glProductCode;
+						params['custscript_b3_product_code'] = b3ProductCode;
 
 						var status = nlapiScheduleScript('customscript_upy_ss_retro_update', 'customdeploy_upy_ss_retro_update', params);
-            if (status == 'QUEUED')
-            {
-                nlapiLogExecution('DEBUG', 'QUEUED', 'Sales Order Field Updates is Deployed');
-            }
+						
+						nlapiLogExecution('DEBUG', '--- RUN SCHEDULED UPDATE ---', 'The value of GL Product Code is: ' + glProductCode + ' | Sales Order Field Updates for GL Product Code is Deployed');
+            
 					}
 				}
+				else
+				{
+					nlapiLogExecution('DEBUG', '--- NO SCHEDULED UPDATE---', 'The value of GL Product Code is: ' + glProductCode);
+				}
+
+				if(searchFieldChange && b3ProductCode != null)
+				{
+					if(searchFieldChange != null && searchFieldChange != '')
+					{
+
+						var params = new Array();
+						params['custscript_itemid'] = itemId;
+						params['custscript_gl_product_code'] = glProductCode;
+						params['custscript_b3_product_code'] = b3ProductCode;
+
+						var status = nlapiScheduleScript('customscript_upy_ss_retro_update', 'customdeploy_upy_ss_retro_update', params);
+						
+						nlapiLogExecution('DEBUG', '--- RUN SCHEDULED UPDATE ---', 'The value of B3 Product Code is: ' + b3ProductCode + ' | Sales Order Field Updates for B3 Product Code is Deployed');
+
+					}
+				}
+				else
+				{
+					nlapiLogExecution('DEBUG', '--- NO SCHEDULED UPDATE---', 'The value of B3 Product Code is: ' + b3ProductCode);
+				}
+
 			}
 		}
 	}
@@ -83,10 +123,6 @@ var hasFieldChanges = function(itemId)
 	var itemSearch = nlapiSearchRecord("item",null,
 		[
 		   ["systemnotes.field","anyof","CUSTITEM_B3_PRODUCT_CODE","INVTITEM.KCLASS"],
-		   "AND",
-		   ["systemnotes.oldvalue","isempty",""],
-		   "AND",
-		   ["systemnotes.newvalue","isnotempty",""],
 		   "AND",
 		   ["systemnotes.date","onorafter","today"],
 		   "AND",
