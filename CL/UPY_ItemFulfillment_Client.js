@@ -68,39 +68,35 @@ function clientFieldChanged(type, name, linenum)
 		{
 			var indexItem = nlapiGetCurrentLineItemIndex('item');
 			var itemFulfillmentFields = getItemFulfillmentsFields(indexItem);
-			//alert('Index: ' + indexItem);
 			var selected = getSelectedItemFulfillmentsFields(indexItem);
-			//alert(selected);
 			var checkedCount = getCheckedCount();
 
 			if(checkedCount > 1)
 			{
 				//compare
 				var isDuplicate = itemFulfillmentFields.indexOf(selected);
-				//alert('Item Fulfillment Fields: ' + itemFulfillmentFields);
-				//alert('Is Duplicate: ' + isDuplicate);
 				if(isDuplicate === -1)
 				{
 					alert('You cannot group these items');
 					nlapiSetCurrentLineItemValue('item', 'itemreceive', 'F');
 				}
 			}
-			
+
 			var onHold = getSelectedItemHold(indexItem);
 			if (onHold)
 			{
 				alert('Line is onhold');
 				nlapiSetCurrentLineItemValue('item', 'itemreceive', 'F');
 			}
-			
+
 			var qtyAvail = getSelectedItemQty(indexItem);
 			if (!(qtyAvail))
 			{
 				alert('Available quantity is not enough');
 				nlapiSetCurrentLineItemValue('item', 'itemreceive', 'F');
 			}
-			
-			
+
+
 		}
 	}
 }
@@ -187,9 +183,13 @@ var getItemFulfillmentsFields = function(indexItem)
 		if(isChecked == 'T' && i != indexItem)
 		{
 			var customLineLocation = nlapiGetLineItemValue('item', 'custcol_custom_line_location', i);
-			var requestedDeliveryDate = nlapiGetLineItemValue('item', 'custcol__requested_delivery_date', i);
 			var lineShipMethod = nlapiGetLineItemValue('item', 'custcol_line_ship_method', i);
-			var releaseByDate = nlapiGetLineItemValue('item', 'custcol_release_by_date', i);
+
+			var tempRequestedDeliveryDate = nlapiGetLineItemValue('item', 'custcol__requested_delivery_date', index);
+			var requestedDeliveryDate = nlapiDateToString(nlapiStringToDate(tempRequestedDeliveryDate));
+
+			var tempReleaseByDate = nlapiGetLineItemValue('item', 'custcol_release_by_date', index);
+			var releaseByDate = nlapiDateToString(nlapiStringToDate(tempReleaseByDate));
 		}
 
 		itemFulfillmentLines.push(customLineLocation + '|' + requestedDeliveryDate + '|' + lineShipMethod + '|' + releaseByDate);
@@ -204,15 +204,20 @@ var getSelectedItemFulfillmentsFields = function(index)
 	if(isChecked == 'T')
 	{
 		var customLineLocation = nlapiGetLineItemValue('item', 'custcol_custom_line_location', index);
-		var requestedDeliveryDate = nlapiGetLineItemValue('item', 'custcol__requested_delivery_date', index);
 		var lineShipMethod = nlapiGetLineItemValue('item', 'custcol_line_ship_method', index);
-		var releaseByDate = nlapiGetLineItemValue('item', 'custcol_release_by_date', index);
+				
+		var tempRequestedDeliveryDate = nlapiGetLineItemValue('item', 'custcol__requested_delivery_date', index);
+		var requestedDeliveryDate = nlapiDateToString(nlapiStringToDate(tempRequestedDeliveryDate));
+
+		var tempReleaseByDate = nlapiGetLineItemValue('item', 'custcol_release_by_date', index);
+		var releaseByDate = nlapiDateToString(nlapiStringToDate(tempReleaseByDate));
 	}
 
 	var itemFulfillmentLines = customLineLocation + '|' + requestedDeliveryDate + '|' + lineShipMethod + '|' + releaseByDate;
 	return itemFulfillmentLines;
 }
 
+//Suseela
 var getCheckedCount = function()
 {
 	var itemFulfillmentLines = [];
@@ -231,21 +236,21 @@ var getCheckedCount = function()
 	return checkedCount;
 }
 
-
+//Suseela
 function getSelectedItemHold(lineno)
  {
        var lineOnHold = nlapiGetLineItemValue("item", "custcol_line_hold", lineno);
-		if (lineOnHold)	
+		if (lineOnHold)
         return true;
 	    else
-		return false;	
+		return false;
 }
 
 
-function getItemAvailableQty(loc,item) 
+function getItemAvailableQty(loc,item)
 {
 		  //alert ("getItemAvailableQty" + loc + "-"+item);
-		   
+
 		  var searchResults = nlapiSearchRecord("item",'customsearch_item_loc_qty_available',
 			[
 			   ["internalid","anyOf",item],
@@ -266,35 +271,35 @@ function getItemAvailableQty(loc,item)
 				//alert ("qty"+ qty);
 				return qty;
 			}
-		}	
-		  return 0;	  
+		}
+		  return 0;
 }
 
-function getSelectedItemQty(lineno) 
+function getSelectedItemQty(lineno)
 {
-	  
+
 	   var loc = nlapiGetLineItemValue("item", "custcol_custom_line_location", lineno);
        var itm = nlapiGetLineItemValue("item", "item", lineno);
 	   var itemQty = nlapiGetLineItemValue("item", "quantity", lineno);
 	   var remQty = nlapiGetLineItemValue("item", "quantityremaining", lineno);
 	   var sub = nlapiGetFieldValue('subsidiary');
-	   
+
 	   if (loc && itm)
 	   {
 		   var aQty = getItemAvailableQty(loc,itm);
 			//alert("sub" +sub);
-		  if (itemQty && aQty && parseFloat(itemQty)<=parseFloat(aQty) || sub == 8 ) 
+		  if (itemQty && aQty && parseFloat(itemQty)<=parseFloat(aQty) || sub == 8 )
 		  {
 			  //alert("itemQty" + itemQty +  "   -- " + aQty);
 			  return true;
-		  } 
-		  else 
+		  }
+		  else
 		  {
-			 return false;	   
-		  } 
-	   }  
+			 return false;
+		  }
+	   }
 	   else
 	   {
 		   return false;
-	   }   
-}	   
+	   }
+}
