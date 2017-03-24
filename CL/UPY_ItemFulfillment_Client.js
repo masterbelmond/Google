@@ -64,6 +64,8 @@ function clientFieldChanged(type, name, linenum)
 	if(type == 'item')
 	{
 		var itemReceive = nlapiGetCurrentLineItemValue('item', 'itemreceive');
+		var indexItem = nlapiGetCurrentLineItemIndex('item');
+		
 		if(itemReceive == 'T')
 		{
 			var indexItem = nlapiGetCurrentLineItemIndex('item');
@@ -176,6 +178,8 @@ var getItemFulfillmentsFields = function(indexItem)
 {
 	var itemFulfillmentLines = [];
 	var itemCount = nlapiGetLineItemCount('item');
+	var requestedDeliveryDate = '';
+	var releaseByDate = '';
 
 	for(var i = 1; i <= itemCount; i++)
 	{
@@ -185,11 +189,18 @@ var getItemFulfillmentsFields = function(indexItem)
 			var customLineLocation = nlapiGetLineItemValue('item', 'custcol_custom_line_location', i);
 			var lineShipMethod = nlapiGetLineItemValue('item', 'custcol_line_ship_method', i);
 
-			var tempRequestedDeliveryDate = nlapiGetLineItemValue('item', 'custcol__requested_delivery_date', index);
-			var requestedDeliveryDate = nlapiDateToString(nlapiStringToDate(tempRequestedDeliveryDate));
+			var tempRequestedDeliveryDate = nlapiGetLineItemValue('item', 'custcol__requested_delivery_date', i);
+			if(tempRequestedDeliveryDate != null)
+			{
+				requestedDeliveryDate = nlapiDateToString(nlapiStringToDate(tempRequestedDeliveryDate));
+			}
 
-			var tempReleaseByDate = nlapiGetLineItemValue('item', 'custcol_release_by_date', index);
-			var releaseByDate = nlapiDateToString(nlapiStringToDate(tempReleaseByDate));
+			var tempReleaseByDate = nlapiGetLineItemValue('item', 'custcol_release_by_date', i);
+			if(tempReleaseByDate)
+			{
+				releaseByDate = nlapiDateToString(nlapiStringToDate(tempReleaseByDate));
+			}
+
 		}
 
 		itemFulfillmentLines.push(customLineLocation + '|' + requestedDeliveryDate + '|' + lineShipMethod + '|' + releaseByDate);
@@ -201,16 +212,25 @@ var getItemFulfillmentsFields = function(indexItem)
 var getSelectedItemFulfillmentsFields = function(index)
 {
 	var isChecked = nlapiGetLineItemValue('item', 'itemreceive', index);
+	var requestedDeliveryDate = '';
+	var releaseByDate = '';
+
 	if(isChecked == 'T')
 	{
 		var customLineLocation = nlapiGetLineItemValue('item', 'custcol_custom_line_location', index);
 		var lineShipMethod = nlapiGetLineItemValue('item', 'custcol_line_ship_method', index);
-				
-		var tempRequestedDeliveryDate = nlapiGetLineItemValue('item', 'custcol__requested_delivery_date', index);
-		var requestedDeliveryDate = nlapiDateToString(nlapiStringToDate(tempRequestedDeliveryDate));
 
-		var tempReleaseByDate = nlapiGetLineItemValue('item', 'custcol_release_by_date', index);
-		var releaseByDate = nlapiDateToString(nlapiStringToDate(tempReleaseByDate));
+			var tempRequestedDeliveryDate = nlapiGetLineItemValue('item', 'custcol__requested_delivery_date', index);
+			if(tempRequestedDeliveryDate != null)
+			{
+				requestedDeliveryDate = nlapiDateToString(nlapiStringToDate(tempRequestedDeliveryDate));
+			}
+
+			var tempReleaseByDate = nlapiGetLineItemValue('item', 'custcol_release_by_date', index);
+			if(tempReleaseByDate)
+			{
+				releaseByDate = nlapiDateToString(nlapiStringToDate(tempReleaseByDate));
+			}
 	}
 
 	var itemFulfillmentLines = customLineLocation + '|' + requestedDeliveryDate + '|' + lineShipMethod + '|' + releaseByDate;
