@@ -10,9 +10,7 @@ function populateIFFields(type,name)
 			var recType  = nlapiGetRecordType();
 			var recId =  nlapiGetRecordId();
 			var soId = nlapiGetFieldValue('createdfrom');
-			var subsidiaryId=nlapiGetFieldValue('subsidiary');
-			var ifLocation=nlapiGetFieldValue('custbody_if_location');
-			nlapiLogExecution('DEBUG', 'entered', ' soId = ' +soId + ' , recType = ' + recType + ', recId = '+ recId+ ', subsidiaryId = '+ subsidiaryId );
+			nlapiLogExecution('DEBUG', 'entered', ' soId = ' +soId + ' , recType = ' + recType + ', recId = '+ recId );
 			
 			
 			var itemCount = nlapiGetLineItemCount('item');
@@ -74,7 +72,6 @@ function populateIFFields(type,name)
 					nlapiLogExecution('DEBUG', 'if results',soId);
 					for (var i = 0; i<results.length; i++ )
 					{
-						if(subsidiaryId!='8'){
 						nlapiLogExecution('DEBUG', 'for loop ',i);
 						var IFFields = getIFOrderTypeFields( results[i].getValue(columns[20]), results[i].getValue(columns[21]), results[i].getValue(columns[22]));
 						var addressfields = ['address1','address2','address3','city','state','country','zip'];
@@ -141,77 +138,7 @@ function populateIFFields(type,name)
 													   ]
 										,true);
 										
-						nlapiLogExecution('DEBUG', 'number',results[i].getValue(columns[18]));	
-					  }else{
-						  // Subsidiary is AUS 
-						  
-                            
-							nlapiLogExecution('DEBUG', 'for loop ',i);
-							var IFFields = getIFOrderTypeFields( results[i].getValue(columns[20]), results[i].getValue(columns[21]), results[i].getValue(columns[22]));
-							var addressfields = ['address1','address2','address3','city','state','country','zip'];
-					        var  shipfrom = nlapiLookupField('location',ifLocation,addressfields); // Get Value from Mapping location
-							nlapiSubmitField(recType,recId,[
-															'custbody_cseg_channel',
-															'custbody_transaction_subtype',
-															'custbody_transaction_source',
-															'shipaddress',
-															'custbody_intg_edi_ship_label',
-															'custbody_ship_label',
-															'custbody_if_order_nbr',
-															'custbody_vendor_id',
-															'custbody_imlaccount',
-															'custbody_tms_hold',
-															'custbody_signature_req',
-															'custbody_customer_message',
-															'custbody_requested_delivery_date',
-															'custbody_b2b_po_date',
-															'custbody_3pl_freight_terms',
-															'shipmethod',
-															'custbody_requested_ship_date',
-															'custbody_b2b_so_num',
-															'custbody_if_currency',
-															'custbody_if_order_type',
-															'custbody_if_to_location',
-															'custbody_if_cost_center',
-															'custbody_sales_channel_code',
-															'custbody_ship_from_location',
-															'custbody_delivery_window_from',
-															'custbody_delivery_window_to',
-															'custbody_customer_shipping_method'
-															],
-							                               [
-														   results[i].getValue(columns[0]),  //custbody_cseg_channel
-														   results[i].getValue(columns[1]),  // custbody_transaction_subtype
-														   results[i].getValue(columns[2]),  // custbody_transaction_source
-														   results[i].getValue(columns[3]),  // shipaddress
-														   results[i].getValue(columns[4]),  // custbody_intg_edi_ship_label
-														   results[i].getValue(columns[5]),  // custbody_ship_label
-														   results[i].getValue(columns[6]),  //custbody_if_order_nbr
-														   results[i].getValue(columns[7]),  //custbody_vendor_id
-														   results[i].getValue(columns[8]),  //custbody_imlaccount
-														   results[i].getValue(columns[9]),  //custbody_tms_hold
-														   results[i].getValue(columns[10]),  //custbody_signature_req
-														   results[i].getValue(columns[11]),  //custbody_customer_message
-														   results[i].getValue(columns[24]),  //custbody_requested_delivery_date
-														   results[i].getValue(columns[13]),  //custbody_b2b_po_date
-														   results[i].getValue(columns[14]), //custbody_3pl_freight_terms
-														   results[i].getValue(columns[15]),  //shipmethod
-														   results[i].getValue(columns[16]), // ship date on order and custbody_requested_ship_date on IF
-														   results[i].getValue(columns[18]),  //custbody_b2b_so_num
-														   results[i].getValue(columns[19]),  //custbody_if_currency
-														   IFFields.ifordertype,  //custbody_if_order_type
-														   IFFields.iftolocation,  //custbody_if_to_location
-														   results[i].getValue(columns[23]), //custbody_if_cost_center
-														   IFFields.sccode, //custbody_sales_channel_code
-														   shipfrom.address1+'|'+shipfrom.address2+'|'+shipfrom.address3+'|'+shipfrom.city+'|'+shipfrom.state+'|'+shipfrom.zip+'|'+shipfrom.country, //custbody_ship_from_location
-														   results[i].getValue(columns[25]),  //custbody_delivery_window_from
-														   results[i].getValue(columns[26]),  //custbody_delivery_window_to
-														   results[i].getValue(columns[27])  //custbody_lineshipmethod
-														   ]
-											,true);
-											
-							nlapiLogExecution('DEBUG', 'number',results[i].getValue(columns[18]));	  
-					  }
+						nlapiLogExecution('DEBUG', 'number',results[i].getValue(columns[18]));				
 					}
 				}	
 				//columns[12] = nlobjSearchColumn('custcol_line_no');
@@ -278,50 +205,83 @@ function reserveInventory(type,name)
 {
 	var selCnt = 0;
 	var context = nlapiGetContext();
-	var subsidiaryID=nlapiGetFieldValue('subsidiary');
 	nlapiLogExecution('DEBUG', 'reserveInventory',type + '     ' + context.getExecutionContext());
 	
-	if ( (type == 'create') && (context.getExecutionContext() == 'userinterface') && subsidiaryID!='8' )  
+	if ( (type == 'create') && (context.getExecutionContext() == 'userinterface')  )  
 	{	
-		//nlapiLogExecution('DEBUG', 'reserveInventory',type + '     ' + context.getExecutionContext());
 		try
 		{
+			
 			 nlapiLogExecution('DEBUG', 'reserveInventory','if');
 			 var ifRec =  nlapiGetNewRecord();;
 			 var soInternalId = nlapiGetFieldValue('createdfrom');
 			 var soRec = nlapiLoadRecord('salesorder',soInternalId);
 			 var iflinecount = ifRec.getLineItemCount('item');
+			iflineno = ifRec.getLineItemValue('item','line',l);
 			 for (var l=1; l<= iflinecount; l++ )
 			{
-				nlapiLogExecution('DEBUG', 'reserveInventory',l);
-				isSelected = ifRec.getLineItemValue('item', 'itemreceive', l);
-				iflineno = ifRec.getLineItemValue('item','custcol_line_no',l);
-				var onhandQty = soRec.getLineItemValue('item','quantityonhand',iflineno);
-				var lineQty = soRec.getLineItemValue('item','quantity',iflineno);
-				var iflineQty = ifRec.getLineItemValue('item','quantity',iflineno);
-				nlapiLogExecution('DEBUG', 'availableQty', onhandQty + ' ' + lineQty + '   ' + isSelected);
+				var isSelected = ifRec.getLineItemValue('item', 'itemreceive', l);
+				if (isSelected=='T'){
+					for (var j=1;j<=soRec.getLineItemCount('item');j++){
+						var soLineNo =  soRec.getLineItemValue('item','line',j);
+						
+						if (soLineNo == iflineno)
+						{
+							var onhandQty =  soRec.getLineItemValue('item','quantityonhand',j);
+							var lineQty = soRec.getLineItemValue('item','quantity',j);
+							var iflineQty = nlapiGetLineItemValue('item','quantity',l);
+							
+							if ( parseInt(iflineQty) <= parseInt(onhandQty) )
+							{
+								soRec.setLineItemValue('item', 'commitinventory', j, 1);   // set line commit to 'Available Qty
+								soRec.setLineItemValue('item', 'quantitycommitted', j, parseFloat(iflineQty));  // commit if line quantity
+								nlapiLogExecution('DEBUG', 'reserveInventory', 'iflineQty: '+iflineQty);
+							}	
+							else
+							{
+								ifRec.setLineItemValue('item', 'itemreceive', l,'F');
+								//nlapiLogExecution('Debug','enter here');
+							}
+							selCnt++;
+						}
+					}
+				}
+				
+				//nlapiLogExecution('DEBUG', 'reserveInventory','lineno: '+l);
+				//isSelected = ifRec.getLineItemValue('item', 'itemreceive', l);
+				//iflineno = ifRec.getLineItemValue('item','custcol_line_no',l);
+				
+				
+				
+				
+				//nlapiLogExecution('DEBUG', 'iflineno: '+iflineno, 'iflineQty: '+iflineQty);
+				//nlapiLogExecution('DEBUG', 'availableQty', 'onhandQty: '+onhandQty + ' ,lineQty: ' + lineQty + ' ,isSelected: ' + isSelected);
+				
+				/*
 				if (isSelected == 'T')
 				{
 					if ( parseInt(iflineQty) <= parseInt(onhandQty) )
 					{
 						soRec.setLineItemValue('item', 'commitinventory', iflineno, 1);   // set line commit to 'Available Qty
 						soRec.setLineItemValue('item', 'quantitycommitted', iflineno, parseFloat(iflineQty));  // commit if line quantity
-						nlapiLogExecution('DEBUG', 'reserveInventory', iflineQty);
+						nlapiLogExecution('DEBUG', 'reserveInventory', 'iflineQty: '+iflineQty);
 					}	
 					else
 					{
 						ifRec.setLineItemValue('item', 'itemreceive', l,'F');
+						//nlapiLogExecution('Debug','enter here');
 					}
 					selCnt++;
 				}
-				
-					
-			}	
+				*/
+			}
+			
 			if (selCnt > 0)
 			{
 				var soid = nlapiSubmitRecord(soRec, true);
-				nlapiLogExecution('DEBUG', 'reserveInventory',selCnt);
+				nlapiLogExecution('DEBUG', 'reserveInventory','selCnt: '+selCnt);
 			}
+			
 		}
 		catch(e)
 		{
